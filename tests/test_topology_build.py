@@ -6,7 +6,6 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "build_api"))
 
@@ -28,21 +27,11 @@ from utils import (  # noqa: E402
 
 
 LAB1_TOPOLOGY_PATH = ROOT / "build_api" / "lab1-start" / "topology.json"
-LAB1_COMPLETE_TOPOLOGY_PATH = (
-    ROOT / "build_api" / "lab1-complete" / "topology.json"
-)
-LAB2_STARTER_TOPOLOGY_PATH = (
-    ROOT / "build_api" / "lab2-start" / "topology.json"
-)
-LAB2_COMPLETE_TOPOLOGY_PATH = (
-    ROOT / "build_api" / "lab2-complete" / "topology.json"
-)
-LAB3_START_TOPOLOGY_PATH = (
-    ROOT / "build_api" / "lab3-start" / "topology.json"
-)
-LAB3_COMPLETE_TOPOLOGY_PATH = (
-    ROOT / "build_api" / "lab3-complete" / "topology.json"
-)
+LAB1_COMPLETE_TOPOLOGY_PATH = ROOT / "build_api" / "lab1-complete" / "topology.json"
+LAB2_STARTER_TOPOLOGY_PATH = ROOT / "build_api" / "lab2-start" / "topology.json"
+LAB2_COMPLETE_TOPOLOGY_PATH = ROOT / "build_api" / "lab2-complete" / "topology.json"
+LAB3_START_TOPOLOGY_PATH = ROOT / "build_api" / "lab3-start" / "topology.json"
+LAB3_COMPLETE_TOPOLOGY_PATH = ROOT / "build_api" / "lab3-complete" / "topology.json"
 
 
 class FakeGNS3Client:
@@ -81,9 +70,7 @@ class FakeGNS3Client:
     def create_project(self, name):
         return {"name": name, "project_id": "project-id"}
 
-    def create_node_from_template(
-        self, project_id, template_id, node, compute_id
-    ):
+    def create_node_from_template(self, project_id, template_id, node, compute_id):
         node_types = {
             "client-lab1-id": "docker",
             "dns-lab1-id": "docker",
@@ -366,10 +353,7 @@ class TopologyValidationTests(unittest.TestCase):
                 "dns_server": "dns-server-lab1-no-recursion",
                 "web_server": "web-server-lab1-vulnerable",
             },
-            {
-                alias: spec["name"]
-                for alias, spec in topology["templates"].items()
-            },
+            {alias: spec["name"] for alias, spec in topology["templates"].items()},
         )
         self.assertTrue(
             all("template_id" not in spec for spec in topology["templates"].values())
@@ -390,9 +374,7 @@ class TopologyValidationTests(unittest.TestCase):
         self.assertIn("README.md", entries)
         self.assertTrue(
             all(
-                name == "configs"
-                or name == "README.md"
-                or name.endswith(".json")
+                name == "configs" or name == "README.md" or name.endswith(".json")
                 for name in entries
             )
         )
@@ -449,10 +431,7 @@ class TopologyValidationTests(unittest.TestCase):
                 },
             },
             {
-                alias: {
-                    key: resolved[alias][key]
-                    for key in expected_keys
-                }
+                alias: {key: resolved[alias][key] for key in expected_keys}
                 for alias, expected_keys in {
                     "client": ("adapters", "compute_id", "image", "template_type"),
                     "dns_server": (
@@ -583,9 +562,7 @@ class TopologyValidationTests(unittest.TestCase):
         self.assertEqual([], client.deleted_projects)
         self.assertFalse(snapshots[-1][1]["configured"])
         self.assertTrue(snapshots[-1][1]["nodes_stopped"])
-        self.assertEqual(
-            "模拟 IOS 配置失败", snapshots[-1][1]["configuration_error"]
-        )
+        self.assertEqual("模拟 IOS 配置失败", snapshots[-1][1]["configuration_error"])
 
     def test_lab1_router_disables_console_logging(self):
         config_path = LAB1_TOPOLOGY_PATH.parent / "configs" / "core-router.cfg"
@@ -707,8 +684,7 @@ class TopologyValidationTests(unittest.TestCase):
             (
                 0,
                 object(),
-                b"ip address 10.10.20.1 255.255.255.0\r\n"
-                b"Core-Router(config-if)#",
+                b"ip address 10.10.20.1 255.255.255.0\r\nCore-Router(config-if)#",
             ),
             (0, object(), b"end\r\nCore-Router#"),
             (

@@ -1,93 +1,132 @@
 # gns3-api
 
+通过 GNS3 REST API 自动创建和配置网络实验环境的 Python 工具集。项目以 `topology.json` 描述节点、模板、链路和设备配置，由统一构建器完成项目创建、节点连接及配置下发。
 
+## 主要功能
 
-## Getting started
+- 离线校验拓扑定义及其引用的配置文件。
+- 根据 GNS3 服务端已注册的模板创建节点并连接端口。
+- 支持 IOS、VPCS、通用 Telnet 命令和 Docker Start command 配置方式。
+- 保存项目 ID、节点 ID、console 信息及配置结果，支持对已有项目重新应用配置。
+- 提供项目列表导出、模板列表导出和交互式项目管理脚本。
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+## 目录说明
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
-
-## Add your files
-
-* [Create](https://docs.gitlab.com/user/project/repository/web_editor/#create-a-file) or [upload](https://docs.gitlab.com/user/project/repository/web_editor/#upload-a-file) files
-* [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
-
+```text
+gns3-api/
+├── README.md
+├── build_api/
+│   ├── topology_build.py       # 通用拓扑构建命令行入口
+│   ├── utils.py                # GNS3 API 与设备配置辅助逻辑
+│   ├── README.md               # 拓扑字段和配置机制说明
+│   └── lab*/                  # 各实验目录
+│       ├── topology.json      # 拓扑定义
+│       ├── configs/           # 设备配置文件
+│       └── README.md          # 实验说明
+├── tests/
+│   └── test_topology_build.py  # 构建器与设备配置单元测试
+├── list_projects.py           # 导出服务端项目列表
+├── list_templates.py          # 导出服务端模板列表
+├── manage_projects.py         # 交互式停止、删除项目
+├── auto_lab.py                # 按可用模板创建示例节点
+├── local_projects.json        # 项目列表快照
+└── local_templates.json       # 模板列表快照
 ```
-cd existing_repo
-git remote add origin https://gitlab.nju-slab.cn/lh1y/gns3-api.git
-git branch -M main
-git push -uf origin main
+
+### 已有实验
+
+| 实验 | 初始态 | 完成态 / 实验目录 |
+| --- | --- | --- |
+| 实验一：Web 与 DNS 基础 | [lab1-start](build_api/lab1-start/README.md) | [lab1-complete](build_api/lab1-complete/README.md) |
+| 实验二：HTTPS | [lab2-start](build_api/lab2-start/README.md) | [lab2-complete](build_api/lab2-complete/README.md) |
+| 实验三：XSS 与 CSRF | [lab3-start](build_api/lab3-start/README.md) | [lab3-complete](build_api/lab3-complete/README.md) |
+| 实验四：CUBIC 与 BBR 拥塞控制对比 | — | [lab4](build_api/lab4/README.md) |
+| 实验六：TCP 与 UDP Socket Echo | — | [lab6](build_api/lab6/README.md) |
+
+各实验的模板名称、节点地址和配置范围以对应目录说明为准。实验四和实验六的 Router 当前不下发设备配置，构建后仍需按实验要求配置路由器。
+
+## 环境准备
+
+1. 使用 Python 3.10–3.12。当前设备配置模块直接依赖标准库 `telnetlib`，环境中需要能导入该模块。
+2. 启动可访问的 GNS3 服务端，默认 API 地址为 `http://127.0.0.1:3080/v2`。
+3. 在 GNS3 中准备实验所需的模板及对应镜像，并确保拓扑指定的 compute 可用。现有实验使用 `vm` compute，需要准备 GNS3 VM。
+4. 使用 Telnet 下发配置时，运行脚本的主机需要能访问节点的 console 地址及端口。
+
+在项目根目录创建虚拟环境并安装依赖，以下命令适用于 PowerShell：
+
+```powershell
+py -3.12 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install requests
 ```
 
-## Integrate with your tools
+若已有符合要求的虚拟环境，可直接使用。仓库中的 JSON 快照仅供查看，构建器实际从 GNS3 服务端解析模板，不会自动导入模板或制作实验镜像。
 
-* [Set up project integrations](https://gitlab.nju-slab.cn/lh1y/gns3-api/-/settings/integrations)
+## 快速开始
 
-## Collaborate with your team
+以下命令均在项目根目录执行，以实验一初始态为例。
 
-* [Invite team members and collaborators](https://docs.gitlab.com/user/project/members/)
-* [Create a new merge request](https://docs.gitlab.com/user/project/merge_requests/creating_merge_requests/)
-* [Automatically close issues from merge requests](https://docs.gitlab.com/user/project/issues/managing_issues/#closing-issues-automatically)
-* [Enable merge request approvals](https://docs.gitlab.com/user/project/merge_requests/approvals/)
-* [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
+### 1. 离线校验
 
-## Test and Deploy
+```powershell
+python build_api/topology_build.py validate build_api/lab1-start/topology.json
+```
 
-Use the built-in continuous integration in GitLab.
+该命令检查拓扑结构和配置文件，无需连接 GNS3；模板是否存在及镜像能否启动，需要在实际构建时确认。
 
-* [Get started with GitLab CI/CD](https://docs.gitlab.com/ci/quick_start/)
-* [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/user/application_security/sast/)
-* [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/topics/autodevops/requirements/)
-* [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/user/clusters/agent/)
-* [Set up protected environments](https://docs.gitlab.com/ci/environments/protected_environments/)
+### 2. 构建实验
 
-***
+```powershell
+python build_api/topology_build.py build build_api/lab1-start/topology.json
+```
 
-# Editing this README
+构建器创建项目、节点和链路，并按拓扑设置启动节点、应用配置。默认在构建完成后关闭可关机节点；NAT 和内置 Ethernet switch 等常驻节点没有独立关机状态。进入实验时，在 GNS3 中打开生成的项目并启动所需节点。
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+使用其他服务端时，通过 `--server` 指定包含 `/v2` 的完整 API 地址：
 
-## Suggestions for a good README
+```powershell
+python build_api/topology_build.py build build_api/lab1-start/topology.json --server http://192.168.1.100:3080/v2
+```
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+运行状态默认写入实验目录的 `build_state.json`，不会写回 `topology.json`。每次执行 `build` 都会尝试新建项目；修改配置后应使用 `configure` 对已有项目重新配置。
 
-## Name
-Choose a self-explaining name for your project.
+### 3. 暂缓配置或重新配置
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+```powershell
+python build_api/topology_build.py build build_api/lab1-start/topology.json --no-config
+python build_api/topology_build.py configure build_api/lab1-start/topology.json
+```
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+`configure` 从状态文件读取服务端地址和节点信息，启动待配置节点并重新下发配置，完成后遵循 `project.stop_after_build` 设置。IOS 配置会检查命令错误并保存到 startup-config；Docker 配置写入节点实例的 Start command。
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+`build` 和 `configure` 均支持 `--state <路径>` 指定状态文件。使用自定义路径构建后，重新配置时应传入同一路径。
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+若配置阶段失败，构建器会保留项目供修正后重试。可查看命令输出和状态文件中的配置结果，再运行 `configure`。
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+## 辅助脚本
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+```powershell
+python list_projects.py
+python list_templates.py
+python manage_projects.py
+```
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+- `list_projects.py` 将服务端项目列表写入根目录 `local_projects.json`。
+- `list_templates.py` 将服务端模板列表写入根目录 `local_templates.json`。
+- `manage_projects.py` 先输入项目编号，再输入 `s` 停止或 `d` 删除项目；删除操作会实际删除服务端项目。
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+以上脚本的服务器地址由各文件中的 `GNS3_SERVER` 常量指定。
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+`auto_lab.py` 是示例脚本，需要可用的 VPCS 模板，并根据服务端已有模板尝试创建其他类型节点。它没有创建链路或下发实验配置，正式实验使用 `build_api/topology_build.py`。
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+## 新增实验与验证
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+新增实验时，在 `build_api/` 下创建实验目录，添加 `topology.json`、`configs/` 和实验说明，再用通用构建器校验。拓扑字段、模板解析与配置驱动说明见 [构建器文档](build_api/README.md)。
 
-## License
-For open source projects, say how it is licensed.
+运行现有单元测试：
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+```powershell
+python -m unittest discover -s tests -v
+```
+
+单元测试使用模拟客户端验证构建与配置逻辑，实际镜像、compute 和网络连通性仍需在 GNS3 环境中验证。

@@ -3,7 +3,6 @@ from pathlib import Path
 
 import requests
 
-
 GNS3_SERVER = "http://127.0.0.1:3080/v2"
 OUTPUT_FILE = Path(__file__).with_name("local_templates.json")
 
