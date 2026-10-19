@@ -1,0 +1,1058 @@
+{
+  "version": 1,
+  "project": {
+    "name": "Lab9_Enterprise_L2_Network",
+    "auto_start": false,
+    "stop_after_build": true
+  },
+  "templates": {
+    "router": {
+      "name": "c3745",
+      "compute_id": "vm"
+    },
+    "IOSvL2": {
+      "name": "Cisco IOSvL2",
+      "compute_id": "vm"
+    },
+    "switch": {
+      "name": "Ethernet switch",
+      "compute_id": "vm"
+    },
+    "vpcs": {
+      "name": "VPCS",
+      "compute_id": "vm"
+    }
+  },
+  "nodes": [
+    {
+      "name": "ISP",
+      "template": "router",
+      "position": {
+        "x": -50,
+        "y": -382
+      },
+      "properties": {
+        "slot0": "GT96100-FE",
+        "slot1": "",
+        "slot2": "",
+        "slot3": "",
+        "slot4": ""
+      },
+      "config": {
+        "driver": "ios",
+        "file": "configs/ISP.cfg"
+      }
+    },
+    {
+      "name": "ER1",
+      "template": "router",
+      "position": {
+        "x": -372,
+        "y": -319
+      },
+      "properties": {
+        "slot0": "GT96100-FE",
+        "slot1": "NM-1FE-TX",
+        "slot2": "",
+        "slot3": "",
+        "slot4": ""
+      },
+      "config": {
+        "driver": "ios",
+        "file": "configs/ER1.cfg"
+      }
+    },
+    {
+      "name": "ER2",
+      "template": "router",
+      "position": {
+        "x": 312,
+        "y": -322
+      },
+      "properties": {
+        "slot0": "GT96100-FE",
+        "slot1": "NM-1FE-TX",
+        "slot2": "",
+        "slot3": "",
+        "slot4": ""
+      },
+      "config": {
+        "driver": "ios",
+        "file": "configs/ER2.cfg"
+      }
+    },
+    {
+      "name": "CORE1",
+      "template": "router",
+      "position": {
+        "x": -232,
+        "y": -199
+      },
+      "properties": {
+        "slot0": "GT96100-FE",
+        "slot1": "NM-1FE-TX",
+        "slot2": "",
+        "slot3": "",
+        "slot4": ""
+      },
+      "config": {
+        "driver": "ios",
+        "file": "configs/CORE1.cfg"
+      }
+    },
+    {
+      "name": "FW1",
+      "template": "router",
+      "position": {
+        "x": -232,
+        "y": -92
+      },
+      "properties": {
+        "slot0": "GT96100-FE",
+        "slot1": "",
+        "slot2": "",
+        "slot3": "",
+        "slot4": ""
+      },
+      "config": {
+        "driver": "ios",
+        "file": "configs/FW1.cfg"
+      }
+    },
+    {
+      "name": "AGG1",
+      "template": "IOSvL2",
+      "position": {
+        "x": -232,
+        "y": 0
+      },
+      "properties": {
+        "adapters": 16
+      },
+      "config": {
+        "driver": "ios",
+        "file": "configs/AGG1.cfg"
+      }
+    },
+    {
+      "name": "CORE2",
+      "template": "router",
+      "position": {
+        "x": 146,
+        "y": -199
+      },
+      "properties": {
+        "slot0": "GT96100-FE",
+        "slot1": "NM-1FE-TX",
+        "slot2": "",
+        "slot3": "",
+        "slot4": ""
+      },
+      "config": {
+        "driver": "ios",
+        "file": "configs/CORE2.cfg"
+      }
+    },
+    {
+      "name": "FW2",
+      "template": "router",
+      "position": {
+        "x": 146,
+        "y": -92
+      },
+      "properties": {
+        "slot0": "GT96100-FE",
+        "slot1": "",
+        "slot2": "",
+        "slot3": "",
+        "slot4": ""
+      },
+      "config": {
+        "driver": "ios",
+        "file": "configs/FW2.cfg"
+      }
+    },
+    {
+      "name": "AGG2",
+      "template": "IOSvL2",
+      "position": {
+        "x": 146,
+        "y": 0
+      },
+      "properties": {
+        "adapters": 16
+      },
+      "config": {
+        "driver": "ios",
+        "file": "configs/AGG2.cfg"
+      }
+    },
+    {
+      "name": "DMZ-SW1",
+      "template": "router",
+      "position": {
+        "x": -414,
+        "y": 106
+      },
+      "properties": {
+        "slot0": "GT96100-FE",
+        "slot1": "NM-16ESW",
+        "slot2": "",
+        "slot3": "",
+        "slot4": ""
+      },
+      "config": {
+        "driver": "ios",
+        "file": "configs/DMZ-SW1.cfg"
+      }
+    },
+    {
+      "name": "DMZ-SW2",
+      "template": "router",
+      "position": {
+        "x": -102,
+        "y": 106
+      },
+      "properties": {
+        "slot0": "GT96100-FE",
+        "slot1": "NM-16ESW",
+        "slot2": "",
+        "slot3": "",
+        "slot4": ""
+      },
+      "config": {
+        "driver": "ios",
+        "file": "configs/DMZ-SW2.cfg"
+      }
+    },
+    {
+      "name": "TRUST-SW1",
+      "template": "router",
+      "position": {
+        "x": 134,
+        "y": 106
+      },
+      "properties": {
+        "slot0": "GT96100-FE",
+        "slot1": "NM-16ESW",
+        "slot2": "",
+        "slot3": "",
+        "slot4": ""
+      },
+      "config": {
+        "driver": "ios",
+        "file": "configs/TRUST-SW1.cfg"
+      }
+    },
+    {
+      "name": "TRUST-SW2",
+      "template": "router",
+      "position": {
+        "x": 398,
+        "y": 106
+      },
+      "properties": {
+        "slot0": "GT96100-FE",
+        "slot1": "NM-16ESW",
+        "slot2": "",
+        "slot3": "",
+        "slot4": ""
+      },
+      "config": {
+        "driver": "ios",
+        "file": "configs/TRUST-SW2.cfg"
+      }
+    },
+    {
+      "name": "HV1",
+      "template": "router",
+      "position": {
+        "x": -338,
+        "y": 246
+      },
+      "properties": {
+        "slot0": "GT96100-FE",
+        "slot1": "NM-16ESW",
+        "slot2": "",
+        "slot3": "",
+        "slot4": ""
+      },
+      "config": {
+        "driver": "ios",
+        "file": "configs/HV1.cfg"
+      }
+    },
+    {
+      "name": "HV2",
+      "template": "router",
+      "position": {
+        "x": -41,
+        "y": 258
+      },
+      "properties": {
+        "slot0": "GT96100-FE",
+        "slot1": "NM-16ESW",
+        "slot2": "",
+        "slot3": "",
+        "slot4": ""
+      },
+      "config": {
+        "driver": "ios",
+        "file": "configs/HV2.cfg"
+      }
+    },
+    {
+      "name": "HV3",
+      "template": "router",
+      "position": {
+        "x": 258,
+        "y": 246
+      },
+      "properties": {
+        "slot0": "GT96100-FE",
+        "slot1": "NM-16ESW",
+        "slot2": "",
+        "slot3": "",
+        "slot4": ""
+      },
+      "config": {
+        "driver": "ios",
+        "file": "configs/HV3.cfg"
+      }
+    },
+    {
+      "name": "VMOTION-SW1",
+      "template": "switch",
+      "position": {
+        "x": -270,
+        "y": 370
+      },
+      "properties": {
+        "ports_mapping": [
+          {
+            "name": "Ethernet0",
+            "port_number": 0,
+            "type": "access",
+            "vlan": 1
+          },
+          {
+            "name": "Ethernet1",
+            "port_number": 1,
+            "type": "access",
+            "vlan": 1
+          },
+          {
+            "name": "Ethernet2",
+            "port_number": 2,
+            "type": "access",
+            "vlan": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "VMOTION-SW2",
+      "template": "switch",
+      "position": {
+        "x": 130,
+        "y": 382
+      },
+      "properties": {
+        "ports_mapping": [
+          {
+            "name": "Ethernet0",
+            "port_number": 0,
+            "type": "access",
+            "vlan": 1
+          },
+          {
+            "name": "Ethernet1",
+            "port_number": 1,
+            "type": "access",
+            "vlan": 1
+          },
+          {
+            "name": "Ethernet2",
+            "port_number": 2,
+            "type": "access",
+            "vlan": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "ADMIN-PC",
+      "template": "vpcs",
+      "position": {
+        "x": 768,
+        "y": 46
+      },
+      "config": {
+        "driver": "vpcs",
+        "file": "configs/ADMIN-PC.cfg"
+      }
+    },
+    {
+      "name": "OFFICE-PC",
+      "template": "vpcs",
+      "position": {
+        "x": 774,
+        "y": 194
+      },
+      "config": {
+        "driver": "vpcs",
+        "file": "configs/OFFICE-PC.cfg"
+      }
+    },
+    {
+      "name": "LB1-DMZ-PC",
+      "template": "vpcs",
+      "position": {
+        "x": -653,
+        "y": -50
+      }
+    },
+    {
+      "name": "LB1-MGMT-PC",
+      "template": "vpcs",
+      "position": {
+        "x": -766,
+        "y": 58
+      }
+    },
+    {
+      "name": "LB2-DMZ-PC",
+      "template": "vpcs",
+      "position": {
+        "x": -778,
+        "y": 194
+      }
+    },
+    {
+      "name": "LB2-MGMT-PC",
+      "template": "vpcs",
+      "position": {
+        "x": -731,
+        "y": 326
+      }
+    }
+  ],
+  "links": [
+    {
+      "endpoints": [
+        {
+          "node": "ER1",
+          "adapter": 0,
+          "port": 0
+        },
+        {
+          "node": "ISP",
+          "adapter": 0,
+          "port": 0
+        }
+      ]
+    },
+    {
+      "endpoints": [
+        {
+          "node": "ER2",
+          "adapter": 0,
+          "port": 0
+        },
+        {
+          "node": "ISP",
+          "adapter": 0,
+          "port": 1
+        }
+      ]
+    },
+    {
+      "endpoints": [
+        {
+          "node": "ER1",
+          "adapter": 0,
+          "port": 1
+        },
+        {
+          "node": "CORE1",
+          "adapter": 0,
+          "port": 0
+        }
+      ]
+    },
+    {
+      "endpoints": [
+        {
+          "node": "ER1",
+          "adapter": 1,
+          "port": 0
+        },
+        {
+          "node": "CORE2",
+          "adapter": 0,
+          "port": 0
+        }
+      ]
+    },
+    {
+      "endpoints": [
+        {
+          "node": "CORE1",
+          "adapter": 1,
+          "port": 0
+        },
+        {
+          "node": "FW1",
+          "adapter": 0,
+          "port": 0
+        }
+      ]
+    },
+    {
+      "endpoints": [
+        {
+          "node": "FW1",
+          "adapter": 0,
+          "port": 1
+        },
+        {
+          "node": "AGG1",
+          "adapter": 0,
+          "port": 0
+        }
+      ]
+    },
+    {
+      "endpoints": [
+        {
+          "node": "ER2",
+          "adapter": 0,
+          "port": 1
+        },
+        {
+          "node": "CORE1",
+          "adapter": 0,
+          "port": 1
+        }
+      ]
+    },
+    {
+      "endpoints": [
+        {
+          "node": "ER2",
+          "adapter": 1,
+          "port": 0
+        },
+        {
+          "node": "CORE2",
+          "adapter": 0,
+          "port": 1
+        }
+      ]
+    },
+    {
+      "endpoints": [
+        {
+          "node": "CORE2",
+          "adapter": 1,
+          "port": 0
+        },
+        {
+          "node": "FW2",
+          "adapter": 0,
+          "port": 0
+        }
+      ]
+    },
+    {
+      "endpoints": [
+        {
+          "node": "FW2",
+          "adapter": 0,
+          "port": 1
+        },
+        {
+          "node": "AGG2",
+          "adapter": 0,
+          "port": 0
+        }
+      ]
+    },
+    {
+      "endpoints": [
+        {
+          "node": "AGG1",
+          "adapter": 1,
+          "port": 0
+        },
+        {
+          "node": "AGG2",
+          "adapter": 1,
+          "port": 0
+        }
+      ]
+    },
+    {
+      "endpoints": [
+        {
+          "node": "AGG1",
+          "adapter": 2,
+          "port": 0
+        },
+        {
+          "node": "AGG2",
+          "adapter": 2,
+          "port": 0
+        }
+      ]
+    },
+    {
+      "endpoints": [
+        {
+          "node": "AGG1",
+          "adapter": 3,
+          "port": 0
+        },
+        {
+          "node": "DMZ-SW1",
+          "adapter": 1,
+          "port": 0
+        }
+      ]
+    },
+    {
+      "endpoints": [
+        {
+          "node": "AGG2",
+          "adapter": 3,
+          "port": 0
+        },
+        {
+          "node": "DMZ-SW1",
+          "adapter": 1,
+          "port": 1
+        }
+      ]
+    },
+    {
+      "endpoints": [
+        {
+          "node": "AGG1",
+          "adapter": 4,
+          "port": 0
+        },
+        {
+          "node": "DMZ-SW2",
+          "adapter": 1,
+          "port": 0
+        }
+      ]
+    },
+    {
+      "endpoints": [
+        {
+          "node": "AGG2",
+          "adapter": 4,
+          "port": 0
+        },
+        {
+          "node": "DMZ-SW2",
+          "adapter": 1,
+          "port": 1
+        }
+      ]
+    },
+    {
+      "endpoints": [
+        {
+          "node": "AGG1",
+          "adapter": 5,
+          "port": 0
+        },
+        {
+          "node": "TRUST-SW1",
+          "adapter": 1,
+          "port": 0
+        }
+      ]
+    },
+    {
+      "endpoints": [
+        {
+          "node": "AGG2",
+          "adapter": 5,
+          "port": 0
+        },
+        {
+          "node": "TRUST-SW1",
+          "adapter": 1,
+          "port": 1
+        }
+      ]
+    },
+    {
+      "endpoints": [
+        {
+          "node": "AGG1",
+          "adapter": 6,
+          "port": 0
+        },
+        {
+          "node": "TRUST-SW2",
+          "adapter": 1,
+          "port": 0
+        }
+      ]
+    },
+    {
+      "endpoints": [
+        {
+          "node": "AGG2",
+          "adapter": 6,
+          "port": 0
+        },
+        {
+          "node": "TRUST-SW2",
+          "adapter": 1,
+          "port": 1
+        }
+      ]
+    },
+    {
+      "endpoints": [
+        {
+          "node": "DMZ-SW1",
+          "adapter": 1,
+          "port": 2
+        },
+        {
+          "node": "HV1",
+          "adapter": 1,
+          "port": 0
+        }
+      ]
+    },
+    {
+      "endpoints": [
+        {
+          "node": "DMZ-SW2",
+          "adapter": 1,
+          "port": 2
+        },
+        {
+          "node": "HV1",
+          "adapter": 1,
+          "port": 1
+        }
+      ]
+    },
+    {
+      "endpoints": [
+        {
+          "node": "TRUST-SW1",
+          "adapter": 1,
+          "port": 2
+        },
+        {
+          "node": "HV1",
+          "adapter": 1,
+          "port": 2
+        }
+      ]
+    },
+    {
+      "endpoints": [
+        {
+          "node": "TRUST-SW2",
+          "adapter": 1,
+          "port": 2
+        },
+        {
+          "node": "HV1",
+          "adapter": 1,
+          "port": 3
+        }
+      ]
+    },
+    {
+      "endpoints": [
+        {
+          "node": "VMOTION-SW1",
+          "adapter": 0,
+          "port": 0
+        },
+        {
+          "node": "HV1",
+          "adapter": 0,
+          "port": 0
+        }
+      ]
+    },
+    {
+      "endpoints": [
+        {
+          "node": "VMOTION-SW2",
+          "adapter": 0,
+          "port": 0
+        },
+        {
+          "node": "HV1",
+          "adapter": 0,
+          "port": 1
+        }
+      ]
+    },
+    {
+      "endpoints": [
+        {
+          "node": "DMZ-SW1",
+          "adapter": 1,
+          "port": 3
+        },
+        {
+          "node": "HV2",
+          "adapter": 1,
+          "port": 0
+        }
+      ]
+    },
+    {
+      "endpoints": [
+        {
+          "node": "DMZ-SW2",
+          "adapter": 1,
+          "port": 3
+        },
+        {
+          "node": "HV2",
+          "adapter": 1,
+          "port": 1
+        }
+      ]
+    },
+    {
+      "endpoints": [
+        {
+          "node": "TRUST-SW1",
+          "adapter": 1,
+          "port": 3
+        },
+        {
+          "node": "HV2",
+          "adapter": 1,
+          "port": 2
+        }
+      ]
+    },
+    {
+      "endpoints": [
+        {
+          "node": "TRUST-SW2",
+          "adapter": 1,
+          "port": 3
+        },
+        {
+          "node": "HV2",
+          "adapter": 1,
+          "port": 3
+        }
+      ]
+    },
+    {
+      "endpoints": [
+        {
+          "node": "VMOTION-SW1",
+          "adapter": 0,
+          "port": 1
+        },
+        {
+          "node": "HV2",
+          "adapter": 0,
+          "port": 0
+        }
+      ]
+    },
+    {
+      "endpoints": [
+        {
+          "node": "VMOTION-SW2",
+          "adapter": 0,
+          "port": 1
+        },
+        {
+          "node": "HV2",
+          "adapter": 0,
+          "port": 1
+        }
+      ]
+    },
+    {
+      "endpoints": [
+        {
+          "node": "DMZ-SW1",
+          "adapter": 1,
+          "port": 4
+        },
+        {
+          "node": "HV3",
+          "adapter": 1,
+          "port": 0
+        }
+      ]
+    },
+    {
+      "endpoints": [
+        {
+          "node": "DMZ-SW2",
+          "adapter": 1,
+          "port": 4
+        },
+        {
+          "node": "HV3",
+          "adapter": 1,
+          "port": 1
+        }
+      ]
+    },
+    {
+      "endpoints": [
+        {
+          "node": "TRUST-SW1",
+          "adapter": 1,
+          "port": 4
+        },
+        {
+          "node": "HV3",
+          "adapter": 1,
+          "port": 2
+        }
+      ]
+    },
+    {
+      "endpoints": [
+        {
+          "node": "TRUST-SW2",
+          "adapter": 1,
+          "port": 4
+        },
+        {
+          "node": "HV3",
+          "adapter": 1,
+          "port": 3
+        }
+      ]
+    },
+    {
+      "endpoints": [
+        {
+          "node": "VMOTION-SW1",
+          "adapter": 0,
+          "port": 2
+        },
+        {
+          "node": "HV3",
+          "adapter": 0,
+          "port": 0
+        }
+      ]
+    },
+    {
+      "endpoints": [
+        {
+          "node": "VMOTION-SW2",
+          "adapter": 0,
+          "port": 2
+        },
+        {
+          "node": "HV3",
+          "adapter": 0,
+          "port": 1
+        }
+      ]
+    },
+    {
+      "endpoints": [
+        {
+          "node": "DMZ-SW1",
+          "adapter": 1,
+          "port": 5
+        },
+        {
+          "node": "LB1-DMZ-PC",
+          "adapter": 0,
+          "port": 0
+        }
+      ]
+    },
+    {
+      "endpoints": [
+        {
+          "node": "DMZ-SW2",
+          "adapter": 1,
+          "port": 5
+        },
+        {
+          "node": "LB2-DMZ-PC",
+          "adapter": 0,
+          "port": 0
+        }
+      ]
+    },
+    {
+      "endpoints": [
+        {
+          "node": "TRUST-SW1",
+          "adapter": 1,
+          "port": 5
+        },
+        {
+          "node": "OFFICE-PC",
+          "adapter": 0,
+          "port": 0
+        }
+      ]
+    },
+    {
+      "endpoints": [
+        {
+          "node": "TRUST-SW2",
+          "adapter": 1,
+          "port": 5
+        },
+        {
+          "node": "ADMIN-PC",
+          "adapter": 0,
+          "port": 0
+        }
+      ]
+    },
+    {
+      "endpoints": [
+        {
+          "node": "DMZ-SW1",
+          "adapter": 1,
+          "port": 6
+        },
+        {
+          "node": "LB1-MGMT-PC",
+          "adapter": 0,
+          "port": 0
+        }
+      ]
+    },
+    {
+      "endpoints": [
+        {
+          "node": "DMZ-SW2",
+          "adapter": 1,
+          "port": 6
+        },
+        {
+          "node": "LB2-MGMT-PC",
+          "adapter": 0,
+          "port": 0
+        }
+      ]
+    }
+  ]
+}

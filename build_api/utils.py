@@ -278,10 +278,6 @@ def router_initialize(
                 b"Would you like to terminate autoinstall?"
             ], timeout=max(0.1, min(poll_timeout, remaining)))
 
-            console_output = output.decode('utf-8', errors='ignore') if output else ""
-            if console_output:
-                print(f"[DEBUG] Attempt {attempt}: console output:\n{console_output}")
-
             if idx == 0:
                 tn.write(b"no\r\n")
                 time.sleep(0.5)
@@ -396,22 +392,32 @@ def _connect_router_console(host, port, timeout=ROUTER_INITIALIZATION_TIMEOUT):
     )
 
 
-def config_router(port, commands, host=GNS_VM):
+def config_router(port, commands, host=GNS_VM, *, save=True):
     tn = _connect_router_console(host, port)
     time.sleep(1)
     try:
+        tn.write(b"\r\n")
         if not router_initialize(tn):
             raise RouterConfigError("等待 IOS 特权模式提示符超时，未下发配置")
 
         _send_ios_command(tn, "terminal length 0", IOS_PRIVILEGED_PROMPT)
-        _send_ios_command(tn, "configure terminal", IOS_CONFIG_PROMPT)
-
-        for cmd in commands:
-            _send_ios_command(tn, cmd, IOS_CONFIG_PROMPT)
+        # Console scripts supply their own mode transitions, including vlan database.
+        console_script = bool(commands and commands[0].strip().lower() == "enable")
+        if console_script:
+            script_prompt = re.compile(
+                rb"(?m)^[^\r\n()]+(?:\((?:config[^)]*|vlan)\))?#\s*$"
+            )
+            for cmd in commands:
+                _send_ios_command(tn, cmd, script_prompt)
+        else:
+            _send_ios_command(tn, "configure terminal", IOS_CONFIG_PROMPT)
+            for cmd in commands:
+                _send_ios_command(tn, cmd, IOS_CONFIG_PROMPT)
 
         _send_ios_command(tn, "end", IOS_PRIVILEGED_PROMPT)
-        _save_ios_config(tn)
-        print("[OK] Router 配置命令已应用并执行保存")
+        if save:
+            _save_ios_config(tn)
+        print("[OK] Router 配置命令已应用" + ("并执行保存" if save else "（未保存）"))
     finally:
         tn.close()
 

@@ -16,6 +16,7 @@ from topology_build import (  # noqa: E402
     build_topology,
     configure_docker_start_commands,
     configure_existing,
+    configure_nodes,
     load_topology,
     validate_topology,
 )
@@ -481,6 +482,36 @@ class TopologyValidationTests(unittest.TestCase):
         self.assertEqual(2, write_state.call_count)
         write_state.assert_called_with(state_path, state)
 
+    def test_lab7_properties_are_applied_before_links_even_without_config(self):
+        topology_path = ROOT / "build_api" / "lab7" / "topology.json"
+        templates = json.loads((ROOT / "local_templates.json").read_text(encoding="utf-8"))
+        with (
+            patch("topology_build.GNS3Client", FakeGNS3Client),
+            patch.object(FakeGNS3Client, "list_templates", return_value=templates),
+            patch("topology_build._write_state"),
+            patch("builtins.print"),
+        ):
+            build_topology(topology_path, apply_config=False)
+        client = FakeGNS3Client.instance
+        self.assertEqual(17, len(client.created_nodes))
+        self.assertEqual(18, len(client.created_links))
+        properties = {node_id: props for _, node_id, props in client.updated_nodes}
+        self.assertEqual("NM-1FE-TX", properties["node-TRANSIT-BR2"]["slot3"])
+        self.assertEqual(
+            [100, 100, 100, 999, 999, 999, 999, 999],
+            [port["vlan"] for port in properties["node-PUBLIC-SW"]["ports_mapping"]],
+        )
+        first_link = next(i for i, event in enumerate(client.events) if event[0] == "link")
+        self.assertTrue(all(
+            i < first_link for i, event in enumerate(client.events) if event[0] == "update"
+        ))
+
+    def test_node_properties_must_be_an_object(self):
+        path, topology = load_topology(LAB1_TOPOLOGY_PATH)
+        topology["nodes"][0]["properties"] = []
+        with self.assertRaises(TopologyError):
+            validate_topology(topology, path.parent)
+
     def test_lab1_docker_config_is_written_before_nodes_start(self):
         state_path = ROOT / "tests" / "ignored-lab1-state.json"
         with (
@@ -638,7 +669,7 @@ class TopologyValidationTests(unittest.TestCase):
         with (
             patch("topology_build.GNS3Client", FakeGNS3Client),
             patch("topology_build.configure_docker_start_commands"),
-            patch("topology_build.configure_nodes"),
+            patch("topology_build.config_router"),
             patch("topology_build._write_state", side_effect=capture_state),
             patch("builtins.print"),
         ):
@@ -650,11 +681,87 @@ class TopologyValidationTests(unittest.TestCase):
         client = FakeGNS3Client.instance
         router_id = state["nodes"]["core-router"]["node_id"]
         self.assertIn((state["project_id"], router_id), client.started_nodes)
-        self.assertEqual(6, len(client.stopped_nodes))
+        self.assertEqual(7, len(client.stopped_nodes))
         self.assertFalse(snapshots[0][1]["configured"])
         self.assertNotIn("configured_at", snapshots[0][1])
         self.assertTrue(snapshots[-1][1]["configured"])
         self.assertTrue(snapshots[-1][1]["nodes_stopped"])
+
+    def test_ios_nodes_are_started_configured_and_stopped_one_at_a_time(self):
+        client = FakeGNS3Client("http://example.invalid/v2")
+        topology = {"nodes": [
+            {"name": name, "config": {"driver": "ios", "commands": [f"hostname {name}"]}}
+            for name in ("R1", "R2")
+        ]}
+        nodes = {
+            name: {"node_id": name, "node_type": "dynamips", "console": port}
+            for name, port in (("R1", 5001), ("R2", 5002))
+        }
+
+        def configured(port, commands, host):
+            client.events.append(("configure", commands[0].split()[1]))
+
+        with patch("topology_build.config_router", side_effect=configured), patch("builtins.print"):
+            configure_nodes(topology, ROOT, nodes, client=client, project_id="project-id")
+
+        self.assertEqual([
+            ("start", "R1"), ("configure", "R1"), ("stop", "R1"),
+            ("start", "R2"), ("configure", "R2"), ("stop", "R2"),
+        ], client.events)
+
+    def test_ios_failure_does_not_start_next_router(self):
+        client = FakeGNS3Client("http://example.invalid/v2")
+        topology = {"nodes": [
+            {"name": name, "config": {"driver": "ios", "commands": [f"hostname {name}"]}}
+            for name in ("R1", "R2")
+        ]}
+        nodes = {
+            name: {"node_id": name, "node_type": "dynamips", "console": port}
+            for name, port in (("R1", 5001), ("R2", 5002))
+        }
+        with (
+            patch("topology_build.config_router", side_effect=RouterConfigError("timeout")),
+            patch("builtins.print"),
+            self.assertRaises(RouterConfigError),
+        ):
+            configure_nodes(topology, ROOT, nodes, client=client, project_id="project-id")
+        self.assertEqual([("start", "R1")], client.events)
+
+    def test_build_defers_routers_and_restarts_them_only_after_configuration(self):
+        path, topology = load_topology(LAB1_TOPOLOGY_PATH)
+        topology["project"]["stop_after_build"] = False
+        router = next(node for node in topology["nodes"]
+                      if node.get("config", {}).get("driver") == "ios")
+        second = copy.deepcopy(router)
+        second["name"] = "second-router"
+        topology["nodes"].append(second)
+
+        def configured(port, commands, host):
+            client = FakeGNS3Client.instance
+            node = next(runtime for _, _, runtime in client.created_nodes
+                        if runtime["console"] == port)
+            client.events.append(("configure", node["node_id"]))
+
+        with (
+            patch("topology_build.load_topology", return_value=(path, topology)),
+            patch("topology_build.GNS3Client", FakeGNS3Client),
+            patch("topology_build._write_state"),
+            patch("topology_build.config_router", side_effect=configured),
+            patch("builtins.print"),
+        ):
+            state = build_topology(path)
+
+        first_id = f"node-{router['name']}"
+        second_id = "node-second-router"
+        events = [event for event in FakeGNS3Client.instance.events
+                  if event[0] in ("start", "configure", "stop")
+                  and event[1] in (first_id, second_id)]
+        self.assertEqual([
+            ("start", first_id), ("configure", first_id), ("stop", first_id),
+            ("start", second_id), ("configure", second_id), ("stop", second_id),
+            ("start", first_id), ("start", second_id),
+        ], events)
+        self.assertTrue(state["configured"])
 
     def test_router_initialization_timeout_is_extended(self):
         self.assertGreaterEqual(ROUTER_INITIALIZATION_TIMEOUT, 600)
@@ -707,6 +814,7 @@ class TopologyValidationTests(unittest.TestCase):
         telnet_class.assert_called_once_with("192.0.2.10", 5004, timeout=30)
         self.assertEqual(
             [
+                b"\r\n",
                 b"terminal length 0\r\n",
                 b"configure terminal\r\n",
                 *(command.encode() + b"\r\n" for command in commands),

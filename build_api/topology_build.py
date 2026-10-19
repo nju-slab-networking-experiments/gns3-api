@@ -125,6 +125,9 @@ def validate_topology(topology: Any, base_dir: Path) -> None:
             if not isinstance(value, (int, float)) or isinstance(value, bool):
                 raise TopologyError(f"{prefix}.position.{coordinate} 必须是数字")
 
+        if "properties" in spec:
+            _require_mapping(spec["properties"], f"{prefix}.properties")
+
         if "config" in spec:
             config = _require_mapping(spec["config"], f"{prefix}.config")
             driver = _require_non_empty_string(
@@ -438,6 +441,9 @@ def configure_nodes(
     topology: dict[str, Any],
     topology_dir: Path,
     nodes_by_name: dict[str, dict[str, Any]],
+    *,
+    client: GNS3Client | None = None,
+    project_id: str | None = None,
 ) -> None:
     configurable_nodes = [
         node
@@ -462,8 +468,17 @@ def configure_nodes(
         commands = _read_commands(config, topology_dir)
         driver = config["driver"]
         print(f"  - {name}: {driver}, {len(commands)} 条命令")
+        if (client is not None and runtime.get("node_type") in STOPPABLE_NODE_TYPES
+                and runtime.get("status") != "started"):
+            client.start_node(project_id, runtime["node_id"])
+            runtime["status"] = "started"
+            print(f"  [OK] 已启动待配置节点: {name}")
         if driver == "ios":
             config_router(console, commands, host=host)
+            if client is not None:
+                client.stop_node(project_id, runtime["node_id"])
+                runtime["status"] = "stopped"
+                print(f"  [OK] 配置已保存并关闭: {name}")
         elif driver == "vpcs":
             config_vpcs_commands(console, commands, host=host)
         else:
@@ -484,7 +499,9 @@ def stop_nodes(
             always_running.append(name)
             print(f"  [SKIP] 常驻节点无需关闭: {name}")
             continue
-        client.stop_node(project_id, node["node_id"])
+        if node.get("status") != "stopped":
+            client.stop_node(project_id, node["node_id"])
+            node["status"] = "stopped"
         stopped.append(name)
         print(f"  [OK] 已关闭: {name}")
     print("[OK] 所有可关机节点均已关闭")
@@ -522,6 +539,11 @@ def build_topology(
             node = client.create_node_from_template(
                 project_id, template["template_id"], node_spec, compute_id
             )
+            if node_spec.get("properties"):
+                updated = client.update_node_properties(
+                    project_id, node["node_id"], node_spec["properties"]
+                )
+                node.update(updated)
             nodes_by_name[node_spec["name"]] = node
             print(f"  [OK] 节点: {node_spec['name']} <- {template['name']}")
 
@@ -546,8 +568,15 @@ def build_topology(
 
         if topology["project"].get("auto_start", True):
             print("\n开始启动节点...")
+            deferred = {
+                spec["name"] for spec in topology["nodes"]
+                if spec.get("config", {}).get("driver") == "ios"
+            } if apply_config else set()
             for name, node in nodes_by_name.items():
+                if name in deferred:
+                    continue
                 client.start_node(project_id, node["node_id"])
+                node["status"] = "started"
                 print(f"  [OK] 已启动: {name}")
     except Exception:
         client.delete_project(project_id)
@@ -570,7 +599,8 @@ def build_topology(
     configuration_failure = None
     if apply_config:
         try:
-            configure_nodes(topology, topology_dir, nodes_by_name)
+            configure_nodes(topology, topology_dir, nodes_by_name,
+                            client=client, project_id=project_id)
         except Exception as exc:
             configuration_failure = exc
             state["configuration_error"] = str(exc)
@@ -599,6 +629,11 @@ def build_topology(
 
     if configuration_failure is not None:
         raise configuration_failure
+    if apply_config and not topology["project"].get("stop_after_build", True):
+        for node in nodes_by_name.values():
+            if node.get("status") == "stopped":
+                client.start_node(project_id, node["node_id"])
+                node["status"] = "started"
     return state
 
 
@@ -643,19 +678,23 @@ def configure_existing(
             restart=True,
         )
 
-        # A successful build normally leaves IOS nodes powered off.  Start the
-        # non-Docker configurable nodes before opening their consoles.  Starting
-        # an already-running GNS3 node is harmless (the API may return 409).
+        # Quiesce IOS nodes first, including nodes left running by a previous run.
         for node_spec in topology["nodes"]:
             config = node_spec.get("config")
-            if not config or config.get("driver") == "docker_start":
+            if not config or config.get("driver") != "ios":
                 continue
             runtime = nodes[node_spec["name"]]
             if runtime.get("node_type") in STOPPABLE_NODE_TYPES:
-                client.start_node(project_id, runtime["node_id"])
-                print(f"  [OK] 已启动待配置节点: {node_spec['name']}")
+                client.stop_node(project_id, runtime["node_id"])
+                runtime["status"] = "stopped"
 
-        configure_nodes(topology, topology_file.parent, nodes)
+        configure_nodes(topology, topology_file.parent, nodes,
+                        client=client, project_id=project_id)
+        if not topology["project"].get("stop_after_build", True):
+            for node in nodes.values():
+                if node.get("status") == "stopped":
+                    client.start_node(project_id, node["node_id"])
+                    node["status"] = "started"
         state["configured"] = True
         state["configured_at"] = datetime.now(timezone.utc).isoformat()
     except Exception as exc:

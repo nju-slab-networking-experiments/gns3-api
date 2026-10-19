@@ -1,0 +1,628 @@
+{
+  "version": 1,
+  "project": {
+    "name": "Lab7_Transit_ISP_BGP_Policy_Failover",
+    "auto_start": true,
+    "stop_after_build": true
+  },
+  "templates": {
+    "router": {
+      "name": "c3745",
+      "compute_id": "vm"
+    },
+    "switch": {
+      "name": "Ethernet switch",
+      "compute_id": "vm"
+    },
+    "vpcs": {
+      "name": "VPCS",
+      "compute_id": "vm"
+    }
+  },
+  "nodes": [
+    {
+      "name": "CORP-ER1",
+      "template": "router",
+      "position": {
+        "x": -650,
+        "y": -420
+      },
+      "properties": {
+        "slot0": "GT96100-FE",
+        "slot1": "",
+        "slot2": "",
+        "slot3": "",
+        "slot4": ""
+      },
+      "config": {
+        "driver": "ios",
+        "file": "configs/CORP-ER1.cfg"
+      }
+    },
+    {
+      "name": "CORP-ER2",
+      "template": "router",
+      "position": {
+        "x": -730,
+        "y": -160
+      },
+      "properties": {
+        "slot0": "GT96100-FE",
+        "slot1": "",
+        "slot2": "",
+        "slot3": "",
+        "slot4": ""
+      },
+      "config": {
+        "driver": "ios",
+        "file": "configs/CORP-ER2.cfg"
+      }
+    },
+    {
+      "name": "CAMPUS-CE1",
+      "template": "router",
+      "position": {
+        "x": -730,
+        "y": 120
+      },
+      "properties": {
+        "slot0": "GT96100-FE",
+        "slot1": "",
+        "slot2": "",
+        "slot3": "",
+        "slot4": ""
+      },
+      "config": {
+        "driver": "ios",
+        "file": "configs/CAMPUS-CE1.cfg"
+      }
+    },
+    {
+      "name": "CAMPUS-CE2",
+      "template": "router",
+      "position": {
+        "x": -730,
+        "y": 400
+      },
+      "properties": {
+        "slot0": "GT96100-FE",
+        "slot1": "",
+        "slot2": "",
+        "slot3": "",
+        "slot4": ""
+      },
+      "config": {
+        "driver": "ios",
+        "file": "configs/CAMPUS-CE2.cfg"
+      }
+    },
+    {
+      "name": "ISP-A-BR1",
+      "template": "router",
+      "position": {
+        "x": -240,
+        "y": -350
+      },
+      "properties": {
+        "slot0": "GT96100-FE",
+        "slot1": "NM-1FE-TX",
+        "slot2": "",
+        "slot3": "",
+        "slot4": ""
+      },
+      "config": {
+        "driver": "ios",
+        "file": "configs/ISP-A-BR1.cfg"
+      }
+    },
+    {
+      "name": "ISP-A-BR2",
+      "template": "router",
+      "position": {
+        "x": -240,
+        "y": -140
+      },
+      "properties": {
+        "slot0": "GT96100-FE",
+        "slot1": "NM-1FE-TX",
+        "slot2": "",
+        "slot3": "",
+        "slot4": ""
+      },
+      "config": {
+        "driver": "ios",
+        "file": "configs/ISP-A-BR2.cfg"
+      }
+    },
+    {
+      "name": "ISP-B-BR1",
+      "template": "router",
+      "position": {
+        "x": -220,
+        "y": 60
+      },
+      "properties": {
+        "slot0": "GT96100-FE",
+        "slot1": "NM-1FE-TX",
+        "slot2": "",
+        "slot3": "",
+        "slot4": ""
+      },
+      "config": {
+        "driver": "ios",
+        "file": "configs/ISP-B-BR1.cfg"
+      }
+    },
+    {
+      "name": "ISP-B-BR2",
+      "template": "router",
+      "position": {
+        "x": -220,
+        "y": 280
+      },
+      "properties": {
+        "slot0": "GT96100-FE",
+        "slot1": "NM-1FE-TX",
+        "slot2": "",
+        "slot3": "",
+        "slot4": ""
+      },
+      "config": {
+        "driver": "ios",
+        "file": "configs/ISP-B-BR2.cfg"
+      }
+    },
+    {
+      "name": "DC-BR1",
+      "template": "router",
+      "position": {
+        "x": 500,
+        "y": -430
+      },
+      "properties": {
+        "slot0": "GT96100-FE",
+        "slot1": "",
+        "slot2": "",
+        "slot3": "",
+        "slot4": ""
+      },
+      "config": {
+        "driver": "ios",
+        "file": "configs/DC-BR1.cfg"
+      }
+    },
+    {
+      "name": "DC-BR2",
+      "template": "router",
+      "position": {
+        "x": 530,
+        "y": -230
+      },
+      "properties": {
+        "slot0": "GT96100-FE",
+        "slot1": "",
+        "slot2": "",
+        "slot3": "",
+        "slot4": ""
+      },
+      "config": {
+        "driver": "ios",
+        "file": "configs/DC-BR2.cfg"
+      }
+    },
+    {
+      "name": "TRANSIT-BR1",
+      "template": "router",
+      "position": {
+        "x": 140,
+        "y": -350
+      },
+      "properties": {
+        "slot0": "GT96100-FE",
+        "slot1": "NM-1FE-TX",
+        "slot2": "",
+        "slot3": "",
+        "slot4": ""
+      },
+      "config": {
+        "driver": "ios",
+        "file": "configs/TRANSIT-BR1.cfg"
+      }
+    },
+    {
+      "name": "TRANSIT-BR2",
+      "template": "router",
+      "position": {
+        "x": 140,
+        "y": -130
+      },
+      "properties": {
+        "slot0": "GT96100-FE",
+        "slot1": "NM-1FE-TX",
+        "slot2": "NM-1FE-TX",
+        "slot3": "NM-1FE-TX",
+        "slot4": ""
+      },
+      "config": {
+        "driver": "ios",
+        "file": "configs/TRANSIT-BR2.cfg"
+      }
+    },
+    {
+      "name": "TRANSIT-BR3",
+      "template": "router",
+      "position": {
+        "x": 140,
+        "y": 140
+      },
+      "properties": {
+        "slot0": "GT96100-FE",
+        "slot1": "NM-1FE-TX",
+        "slot2": "",
+        "slot3": "",
+        "slot4": ""
+      },
+      "config": {
+        "driver": "ios",
+        "file": "configs/TRANSIT-BR3.cfg"
+      }
+    },
+    {
+      "name": "PUBLIC-BR",
+      "template": "router",
+      "position": {
+        "x": 500,
+        "y": 40
+      },
+      "properties": {
+        "slot0": "GT96100-FE",
+        "slot1": "",
+        "slot2": "",
+        "slot3": "",
+        "slot4": ""
+      },
+      "config": {
+        "driver": "ios",
+        "file": "configs/PUBLIC-BR.cfg"
+      }
+    },
+    {
+      "name": "PUBLIC-SW",
+      "template": "switch",
+      "position": {
+        "x": 540,
+        "y": 230
+      },
+      "properties": {
+        "ports_mapping": [
+          {
+            "name": "Ethernet0",
+            "port_number": 0,
+            "type": "access",
+            "vlan": 100
+          },
+          {
+            "name": "Ethernet1",
+            "port_number": 1,
+            "type": "access",
+            "vlan": 100
+          },
+          {
+            "name": "Ethernet2",
+            "port_number": 2,
+            "type": "access",
+            "vlan": 100
+          },
+          {
+            "name": "Ethernet3",
+            "port_number": 3,
+            "type": "access",
+            "vlan": 999
+          },
+          {
+            "name": "Ethernet4",
+            "port_number": 4,
+            "type": "access",
+            "vlan": 999
+          },
+          {
+            "name": "Ethernet5",
+            "port_number": 5,
+            "type": "access",
+            "vlan": 999
+          },
+          {
+            "name": "Ethernet6",
+            "port_number": 6,
+            "type": "access",
+            "vlan": 999
+          },
+          {
+            "name": "Ethernet7",
+            "port_number": 7,
+            "type": "access",
+            "vlan": 999
+          }
+        ]
+      }
+    },
+    {
+      "name": "PUBLIC-PC",
+      "template": "vpcs",
+      "position": {
+        "x": 540,
+        "y": 410
+      },
+      "config": {
+        "driver": "vpcs",
+        "file": "configs/PUBLIC-PC.cfg"
+      }
+    },
+    {
+      "name": "INTERNET-PC",
+      "template": "vpcs",
+      "position": {
+        "x": 820,
+        "y": 210
+      },
+      "config": {
+        "driver": "vpcs",
+        "file": "configs/INTERNET-PC.cfg"
+      }
+    }
+  ],
+  "links": [
+    {
+      "endpoints": [
+        {
+          "node": "CORP-ER1",
+          "adapter": 0,
+          "port": 0
+        },
+        {
+          "node": "ISP-A-BR1",
+          "adapter": 0,
+          "port": 0
+        }
+      ]
+    },
+    {
+      "endpoints": [
+        {
+          "node": "CORP-ER2",
+          "adapter": 0,
+          "port": 0
+        },
+        {
+          "node": "ISP-B-BR1",
+          "adapter": 0,
+          "port": 0
+        }
+      ]
+    },
+    {
+      "endpoints": [
+        {
+          "node": "CAMPUS-CE1",
+          "adapter": 0,
+          "port": 0
+        },
+        {
+          "node": "ISP-A-BR2",
+          "adapter": 0,
+          "port": 0
+        }
+      ]
+    },
+    {
+      "endpoints": [
+        {
+          "node": "CAMPUS-CE2",
+          "adapter": 0,
+          "port": 0
+        },
+        {
+          "node": "ISP-B-BR2",
+          "adapter": 0,
+          "port": 0
+        }
+      ]
+    },
+    {
+      "endpoints": [
+        {
+          "node": "DC-BR1",
+          "adapter": 0,
+          "port": 0
+        },
+        {
+          "node": "TRANSIT-BR1",
+          "adapter": 0,
+          "port": 0
+        }
+      ]
+    },
+    {
+      "endpoints": [
+        {
+          "node": "DC-BR2",
+          "adapter": 0,
+          "port": 0
+        },
+        {
+          "node": "TRANSIT-BR2",
+          "adapter": 0,
+          "port": 0
+        }
+      ]
+    },
+    {
+      "endpoints": [
+        {
+          "node": "ISP-A-BR1",
+          "adapter": 0,
+          "port": 1
+        },
+        {
+          "node": "TRANSIT-BR1",
+          "adapter": 0,
+          "port": 1
+        }
+      ]
+    },
+    {
+      "endpoints": [
+        {
+          "node": "ISP-A-BR2",
+          "adapter": 0,
+          "port": 1
+        },
+        {
+          "node": "TRANSIT-BR2",
+          "adapter": 0,
+          "port": 1
+        }
+      ]
+    },
+    {
+      "endpoints": [
+        {
+          "node": "ISP-B-BR1",
+          "adapter": 0,
+          "port": 1
+        },
+        {
+          "node": "TRANSIT-BR2",
+          "adapter": 1,
+          "port": 0
+        }
+      ]
+    },
+    {
+      "endpoints": [
+        {
+          "node": "ISP-B-BR2",
+          "adapter": 0,
+          "port": 1
+        },
+        {
+          "node": "TRANSIT-BR3",
+          "adapter": 0,
+          "port": 0
+        }
+      ]
+    },
+    {
+      "endpoints": [
+        {
+          "node": "TRANSIT-BR3",
+          "adapter": 0,
+          "port": 1
+        },
+        {
+          "node": "PUBLIC-BR",
+          "adapter": 0,
+          "port": 0
+        }
+      ]
+    },
+    {
+      "endpoints": [
+        {
+          "node": "ISP-A-BR1",
+          "adapter": 1,
+          "port": 0
+        },
+        {
+          "node": "ISP-A-BR2",
+          "adapter": 1,
+          "port": 0
+        }
+      ]
+    },
+    {
+      "endpoints": [
+        {
+          "node": "TRANSIT-BR1",
+          "adapter": 1,
+          "port": 0
+        },
+        {
+          "node": "TRANSIT-BR2",
+          "adapter": 2,
+          "port": 0
+        }
+      ]
+    },
+    {
+      "endpoints": [
+        {
+          "node": "TRANSIT-BR2",
+          "adapter": 3,
+          "port": 0
+        },
+        {
+          "node": "TRANSIT-BR3",
+          "adapter": 1,
+          "port": 0
+        }
+      ]
+    },
+    {
+      "endpoints": [
+        {
+          "node": "ISP-B-BR1",
+          "adapter": 1,
+          "port": 0
+        },
+        {
+          "node": "ISP-B-BR2",
+          "adapter": 1,
+          "port": 0
+        }
+      ]
+    },
+    {
+      "endpoints": [
+        {
+          "node": "PUBLIC-BR",
+          "adapter": 0,
+          "port": 1
+        },
+        {
+          "node": "PUBLIC-SW",
+          "adapter": 0,
+          "port": 0
+        }
+      ]
+    },
+    {
+      "endpoints": [
+        {
+          "node": "PUBLIC-SW",
+          "adapter": 0,
+          "port": 1
+        },
+        {
+          "node": "PUBLIC-PC",
+          "adapter": 0,
+          "port": 0
+        }
+      ]
+    },
+    {
+      "endpoints": [
+        {
+          "node": "PUBLIC-SW",
+          "adapter": 0,
+          "port": 2
+        },
+        {
+          "node": "INTERNET-PC",
+          "adapter": 0,
+          "port": 0
+        }
+      ]
+    }
+  ]
+}
