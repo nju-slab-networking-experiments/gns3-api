@@ -27,7 +27,7 @@
       "compute_id": "vm"
     },
     "dns_server": {
-      "name": "dns-server-lab2-complete",
+      "name": "dns-server-lab1-complete",
       "compute_id": "vm"
     },
     "web_server": {

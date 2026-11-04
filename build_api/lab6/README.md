@@ -7,7 +7,7 @@
 | 节点 | GNS3 模板 name | 镜像 / 地址 |
 |---|---|---|
 | client | client-lab6-complete | `ghcr.io/myywee/client:lab6-complete`；eth0 `10.10.10.10/24`，网关 `10.10.10.1` |
-| Router | Cisco IOSv | 不下发设备配置，保留模板默认状态 |
+| Router | Cisco IOSv | Gi0/0 `10.10.10.1/24`，Gi0/1 `10.20.20.1/24` |
 | server | server-lab6-complete | `ghcr.io/myywee/server:lab6-complete`；eth0 `10.20.20.20/24`，网关 `10.20.20.1` |
 
 模板名称与镜像对应关系来自项目的 `local_templates.json`。实际构建按 name 查找 GNS3 服务端已注册模板，所有节点使用 `vm` compute。
@@ -17,7 +17,7 @@
 | client eth0 — Router Gi0/0 | client 0/0 — Router 0/0 |
 | Router Gi0/1 — server eth0 | Router 1/0 — server 0/0 |
 
-Client 和 Server 位于不同网段。本目录不配置 Router，因此构建完成本身不保证两个网段互通；连通性取决于 Router 已有的接口和路由配置。
+Client 和 Server 位于不同网段，Router 通过 `configs/router.cfg` 配置并启用两个接口，为两端提供网关。两个网段均为直连网段，无需静态路由或动态路由协议。
 
 ## 构建和启动
 
@@ -30,9 +30,9 @@ python build_api/topology_build.py build build_api/lab6/topology.json
 
 Docker 地址配置写入 Start command，每次启动自动生效；构建器追加交互 Bash 入口。构建成功后关闭三个节点，生成 `build_state.json`。开始实验时在 GNS3 中启动全部节点。
 
-Router 的 GNS3 节点名称为 `Router`，没有 `config` 声明或配套配置文件。构建器不会向 Router 下发 IP、hostname、接口启用或保存配置命令；IOS 内部主机名由模板或已有配置决定。删除本地配置声明不会清除已有 GNS3 设备上的配置。
+Router 的 GNS3 节点名称为 `Router`，IOS 主机名配置为 `R1-IOSv`。构建器通过 `ios` 驱动下发 `configs/router.cfg`，自动进入配置模式，并在成功后保存到 startup-config。配置文件仅包含配置模式命令，手动粘贴时应先执行 `enable`、`configure terminal`，完成后执行 `end`、`write memory`。
 
-重新应用本目录对应工程的 Client、Server 配置（Router 不下发配置）：
+重新应用本目录对应工程的 Client、Router、Server 配置：
 
 ```powershell
 python build_api/topology_build.py configure build_api/lab6/topology.json
@@ -48,7 +48,7 @@ python build_api/topology_build.py configure build_api/lab6/topology.json
 
 ## 程序和连通性检查
 
-complete 镜像应预置 Python、iproute2、ping、tcpdump 及 `/opt/socket-lab/` 下的实验程序；生成目录时未运行或检查镜像内容。Router 已具备跨网段转发条件时，可在 client 检查连通性与程序：
+complete 镜像应预置 Python、iproute2、ping、tcpdump 及 `/opt/socket-lab/` 下的实验程序；生成目录时未运行或检查镜像内容。启动全部节点后，在 Router 执行 `show ip interface brief` 和 `show ip route connected`，确认两个接口为 `up/up`，并存在 `10.10.10.0/24`、`10.20.20.0/24` 两条直连路由。随后在 client 检查连通性与程序：
 
 ```bash
 ping -c 3 10.20.20.20
@@ -64,4 +64,4 @@ command -v python3 ip ss ping tcpdump
 python3 -m py_compile /opt/socket-lab/tcp_echo_server.py /opt/socket-lab/udp_echo_server.py /opt/socket-lab/udp_peer.py
 ```
 
-TCP/UDP Echo 服务由学生按设计方案第 7.1 节手动启动在后台，同时监听 18080；本目录仅初始化 Client、Server 网络，避免自动启动与课堂操作重复占用端口。UDP 对等通信使用 client 的 19001 和 server 的 19002。程序缺失时按方案在课前准备镜像，后续操作、抓包和记录表沿用原文档。
+TCP/UDP Echo 服务由学生按设计方案第 7.1 节手动启动在后台，同时监听 18080；本目录初始化 Client、Router、Server 网络，服务程序由学生手动启动。UDP 对等通信使用 client 的 19001 和 server 的 19002。程序缺失时按方案在课前准备镜像，后续操作、抓包和记录表沿用原文档。

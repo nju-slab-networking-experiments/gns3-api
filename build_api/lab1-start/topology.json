@@ -2,7 +2,7 @@
   "version": 1,
   "project": {
     "name": "Lab1_Web_DNS_Fundamentals",
-    "auto_start": true,
+    "auto_start": false,
     "stop_after_build": true
   },
   "templates": {

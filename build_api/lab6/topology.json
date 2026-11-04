@@ -20,7 +20,8 @@
     {
       "name": "Router",
       "template": "router",
-      "position": {"x": 0, "y": 0}
+      "position": {"x": 0, "y": 0},
+      "config": {"driver": "ios", "file": "configs/router.cfg"}
     },
     {
       "name": "server",
