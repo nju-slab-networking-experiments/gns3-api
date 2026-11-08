@@ -1,9 +1,0 @@
-{
-  "state": "../lab7/build_state.json",
-  "default": "configA",
-  "variants": {
-    "configA": "configA",
-    "configB": "configB",
-    "configC": "configC"
-  }
-}

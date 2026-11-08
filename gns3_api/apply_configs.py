@@ -1,14 +1,10 @@
 """Apply console scripts to an existing project, save them, and stop existing devices without rebuilding."""
-import argparse
 import json
 from pathlib import Path
-import sys
 from urllib.parse import urlparse
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-
-from topology_build import GNS3Client, _write_state, STOPPABLE_NODE_TYPES
-from utils import config_router
+from .topology_build import GNS3Client, _write_state, STOPPABLE_NODE_TYPES
+from .utils import config_router
 
 
 def apply(profile_path, variant=None, state_path=None, dry_run=False):
@@ -102,23 +98,3 @@ def apply(profile_path, variant=None, state_path=None, dry_run=False):
     print('[OK] 全部增量配置已应用并保存到 startup-config；所有可关机设备已关闭')
 
 
-def main():
-    for stream in (sys.stdout, sys.stderr):
-        if hasattr(stream, 'reconfigure'):
-            stream.reconfigure(encoding='utf-8')
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('profile', nargs='?', default=str(Path(__file__).resolve().parent / 'configure.json'))
-    parser.add_argument('--variant', help='配置目录名称，默认使用 profile.default')
-    parser.add_argument('--state', help='覆盖已有工程的 build_state.json 路径')
-    parser.add_argument('--dry-run', action='store_true', help='仅离线检查，不连接设备')
-    args = parser.parse_args()
-    try:
-        apply(args.profile, args.variant, args.state, args.dry_run)
-    except Exception as exc:
-        print(f'[ERROR] {exc}', flush=True)
-        return 1
-    return 0
-
-
-if __name__ == '__main__':
-    raise SystemExit(main())

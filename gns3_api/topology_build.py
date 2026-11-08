@@ -2,16 +2,14 @@
 
 from __future__ import annotations
 
-import argparse
 import json
 import shlex
-import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 import requests
-from utils import RouterConfigError, config_raw, config_router, config_vpcs_commands
+from .utils import config_raw, config_router, config_vpcs_commands
 
 DEFAULT_GNS3_SERVER = "http://127.0.0.1:3080/v2"
 SUPPORTED_CONFIG_DRIVERS = {"docker_start", "ios", "vpcs", "raw"}
@@ -250,6 +248,12 @@ class GNS3Client:
     def list_templates(self) -> list[dict[str, Any]]:
         return self._request("GET", "/templates", expected=(200,)).json()
 
+    def list_projects(self) -> list[dict[str, Any]]:
+        return self._request("GET", "/projects", expected=(200,)).json()
+
+    def get_project(self, project_id: str) -> dict[str, Any]:
+        return self._request("GET", f"/projects/{project_id}", expected=(200,)).json()
+
     def create_project(self, name: str) -> dict[str, Any]:
         return self._request(
             "POST", "/projects", expected=(201,), payload={"name": name}
@@ -257,14 +261,24 @@ class GNS3Client:
 
     def delete_project(self, project_id: str) -> None:
         try:
-            self._request(
-                "POST",
-                f"/projects/{project_id}/stop",
-                expected=(200, 204, 404, 409),
-            )
-            self._request("DELETE", f"/projects/{project_id}", expected=(204, 404))
+            self.remove_project(project_id, missing_ok=True)
         except GNS3APIError as exc:
             print(f"[WARN] 自动清理项目失败: {exc}")
+
+    def stop_project(self, project_id: str, *, missing_ok: bool = False) -> None:
+        expected = (200, 204, 409, 404) if missing_ok else (200, 204, 409)
+        self._request("POST", f"/projects/{project_id}/stop", expected=expected)
+
+    def remove_project(
+        self, project_id: str, *, force: bool = False, missing_ok: bool = False
+    ) -> None:
+        if missing_ok or self.get_project(project_id).get("status") != "closed":
+            self.stop_project(project_id, missing_ok=missing_ok)
+        path = f"/projects/{project_id}"
+        if force:
+            path += "?force=true"
+        expected = (204, 404) if missing_ok else (204,)
+        self._request("DELETE", path, expected=expected)
 
     def create_node_from_template(
         self,
@@ -718,53 +732,3 @@ def configure_existing(
     return state
 
 
-def _build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="根据声明式 JSON 创建并配置 GNS3 拓扑")
-    subparsers = parser.add_subparsers(dest="command", required=True)
-
-    validate_parser = subparsers.add_parser("validate", help="离线校验拓扑和配置文件")
-    validate_parser.add_argument("topology", help="topology.json 路径")
-
-    build_parser = subparsers.add_parser("build", help="创建、连接、启动并配置拓扑")
-    build_parser.add_argument("topology", help="topology.json 路径")
-    build_parser.add_argument("--server", default=DEFAULT_GNS3_SERVER)
-    build_parser.add_argument("--state", help="运行状态输出路径")
-    build_parser.add_argument(
-        "--no-config", action="store_true", help="只创建拓扑，暂不应用配置"
-    )
-
-    configure_parser = subparsers.add_parser(
-        "configure", help="根据 build_state.json 重新应用配置"
-    )
-    configure_parser.add_argument("topology", help="topology.json 路径")
-    configure_parser.add_argument("--state", help="运行状态文件路径")
-    return parser
-
-
-def main(argv: list[str] | None = None) -> int:
-    # Windows Python may still default to GBK even in a UTF-8 capable terminal.
-    for stream in (sys.stdout, sys.stderr):
-        if hasattr(stream, "reconfigure"):
-            stream.reconfigure(encoding="utf-8")
-    args = _build_parser().parse_args(argv)
-    try:
-        if args.command == "validate":
-            path, _ = load_topology(args.topology)
-            print(f"[OK] 拓扑定义校验通过: {path}")
-        elif args.command == "build":
-            build_topology(
-                args.topology,
-                server=args.server,
-                state_path=args.state,
-                apply_config=not args.no_config,
-            )
-        else:
-            configure_existing(args.topology, state_path=args.state)
-    except (TopologyError, GNS3APIError, RouterConfigError, OSError) as exc:
-        print(f"[ERROR] {exc}")
-        return 1
-    return 0
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())
