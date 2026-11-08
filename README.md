@@ -28,6 +28,16 @@ python -m gns3_api --help
 
 `topology build` 以及 `project`、`template` 下的命令支持 `--server`。默认地址为 `http://127.0.0.1:3080/v2`，自定义地址也应包含 `/v2`。
 
+## 拓扑目录结构
+
+```text
+topologies/
+└── example/
+    ├── topology.json
+    └── configs/
+        └── pc1.cfg
+```
+
 ## 校验、构建和重新配置
 
 `<拓扑>` 接受 `topologies/` 下的目录名、拓扑目录路径或 `topology.json` 路径。以下命令中的路径请替换为实际路径。
